@@ -24,6 +24,11 @@ class FertilzerRecommedationRequest(BaseModel):
     potassium_level: str
     crop_name: str
 
+class PlantingData(BaseModel):
+    best_season: str
+    season_start: int
+    season_end: int
+    days_to_maturity: int
 
 class CropPredictionRequest(BaseModel):
     nitrogen: int
@@ -50,6 +55,7 @@ class CropPredictionResponse(BaseModel):
     phosphorous_scale: float
     potassium_scale: float
     ph_scale: float
+    planting_data: PlantingData
 
 class FertilizerPredictionRequest(BaseModel):
     cropname: str

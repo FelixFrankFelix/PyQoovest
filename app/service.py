@@ -16,9 +16,13 @@ import app.exceptions as exceptions
 #from utils.model import ResNet9 #test
 #import exceptions as exceptions #test
 import app.recommedation_engine as rec
+#import recommedation_engine as rec
 
 fertilizer = pd.read_csv("app/Data/fertilizer.csv")
 fertilizer_dict = dict(fertilizer)
+planting = pd.read_csv("app/Data/crop-planting-info.csv")
+planting_dict = dict(planting)
+
 
 # -------------------------LOADING THE TRAINED MODELS -----------------------------------------------
 
@@ -109,6 +113,7 @@ def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
         crop_name = my_prediction[0]
     
         fertilizer_data = fertilizer
+        planting_data = planting
 
         crop_name = my_prediction[0]
         N_normal = fertilizer_data[fertilizer_data["Crop"] == crop_name]["N"]
@@ -120,7 +125,19 @@ def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
         P_scale = calc_scale(phosphorous,P_normal,0.05)
         K_scale = calc_scale(potassium,K_normal,0.05)
         pH_scale = calc_scale(ph,pH_normal,0.2)
+
+        best_season = planting_data[planting_data["crop"] == crop_name]["best_season"].values[0]
+        season_start = planting_data[planting_data["crop"] == crop_name]["season_start"].values[0]
+        season_end = planting_data[planting_data["crop"] == crop_name]["season_end"].values[0]
+        days_to_maturity = planting_data[planting_data["crop"] == crop_name]["days_to_maturity"].values[0]
         
+        planting_data = {
+            "best_season": str(best_season),
+            "season_start": int(season_start),
+            "season_end": int(season_end),
+            "days_to_maturity": int(days_to_maturity)
+        }
+        print(planting_data)
         result = {
         "crop": crop_name,
         "nitrogen": nitrogen,
@@ -136,7 +153,8 @@ def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
         "nitrogen_scale": N_scale,
         "phosphorous_scale": P_scale,
         "potassium_scale": K_scale,
-        "ph_scale": pH_scale
+        "ph_scale": pH_scale,
+        "planting_data": planting_data
         }
         return {
         "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
@@ -156,7 +174,7 @@ def predict_fertilizer_service(cropname,nitrogen,phosphorous,potassium):
     soil_P = phosphorous
     soil_K = potassium
     
-    df = pd.read_csv('app/Data/fertilizer.csv')
+    df = fertilizer
 
     crop_list = list(df['Crop'].unique())
     if crop_name not in crop_list:
@@ -331,5 +349,5 @@ def disease_prediction_service(img,crop_name):
         "body": result
         }
    
-
+#print(planting.info())
 #print(predict_crop_service(10,10,10,7,100,"Lagos"))

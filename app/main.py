@@ -56,7 +56,6 @@ async def crop_prediction(request: schema.CropPredictionRequest):
         request.rainfall,
         request.city
     )
-    print(result)
     return result
 
 @app.post("/fertilizer-predict")
