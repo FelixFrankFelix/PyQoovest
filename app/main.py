@@ -46,7 +46,7 @@ async def home():
     return {"STATUS":"OK"}
 
 
-@app.post("/crop-predict",response_model=schema.DetailedCropPredictionResponse)
+@app.post("/crop-predict",response_model=schema.ResponseUnionCropPrediction)
 async def crop_prediction(request: schema.CropPredictionRequest):
     result = service.predict_crop_service(
         request.nitrogen,
