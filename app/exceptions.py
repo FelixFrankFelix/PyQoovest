@@ -94,3 +94,4 @@ class ResponseConstant:
     ERROR_INVALID_INTEREST_RATE = BaseResponse(responseCode="103", responseMessage="Invalid interest Rate")
     ERROR_INVALID_CHECKER_ID = BaseResponse(responseCode="104", responseMessage="Invalid Checker ID")
     ERROR_PROCESSING = BaseResponse(responseCode="105", responseMessage="Processing Failed")
+    LOW_CONFIDENCE = BaseResponse(responseCode="106", responseMessage="Low Confidence")

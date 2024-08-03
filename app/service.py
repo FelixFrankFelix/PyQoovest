@@ -42,9 +42,10 @@ crop_recommendation_model = pickle.load(open(crop_recommendation_model_path, 'rb
 
 def predict_image(img, model=disease_model):
     """
-    Transforms image to tensor and predicts disease label
-    :params: image
-    :return: prediction (string)
+    Transforms image to tensor and predicts disease label with probabilities
+    :params: img (image bytes)
+    :params: model (pretrained model)
+    :return: dictionary with predicted probabilities for each class
     """
     transform = transforms.Compose([
         transforms.Resize(256),
@@ -56,11 +57,12 @@ def predict_image(img, model=disease_model):
 
     # Get predictions from model
     yb = model(img_u)
-    # Pick index with highest probability
-    _, preds = torch.max(yb, dim=1)
-    prediction = disease_classes[preds[0].item()]
-    # Retrieve the class label
-    return prediction
+    # Apply softmax to get probabilities
+    probabilities = torch.nn.functional.softmax(yb, dim=1)
+    # Convert probabilities to a dictionary
+    probabilities_dict = {disease_classes[i]: probabilities[0][i].item() for i in range(len(disease_classes))}
+
+    return probabilities_dict
 
 def weather_fetch(city_name):
     """
@@ -217,12 +219,28 @@ def predict_fertilizer_service(cropname,nitrogen,phosphorous,potassium):
         "body": data
         }
 
-def get_crops():
+def get_crops_fertilizer():
     crops = list(fertilizer["Crop"].unique())
     return {
         "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
         "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
         "body": crops
+        }
+
+def get_crops_diseases():
+    # Extract unique crop names
+    unique_crops = set()
+    for disease_class in disease_classes:
+        crop = disease_class.split("___")[0]
+        unique_crops.add(crop)
+
+    # Convert the set to a sorted list (optional)
+    unique_crops_list = sorted(unique_crops)
+
+    return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": unique_crops_list
         }
 
 def get_crop_recommendation_service(factor,factor_value,factor_normal,crop_name):
@@ -267,4 +285,51 @@ def get_fertilizer_recommendation_service(nitrogen,phosphorous,potassium,nitroge
         "responseCode": exceptions.ResponseConstant.ERROR_PROCESSING.responseCode,
         "responseMessage": recommendation_result
          }
+
+def get_best_crop_prediction(response, crop):
+    """
+    Filters the response to only include results related to the specified crop
+    and returns the crop disease with the highest predicted probability.
+    
+    :param response: Dictionary containing the predicted probabilities for each crop disease.
+    :param crop: The crop to filter predictions by.
+    :return: Dictionary with the best result for the specified crop.
+    """
+    crop = crop.lower()
+
+    # Filter predictions related to the specified crop
+    filtered_predictions = {k: v for k, v in response.items() if k.lower().startswith(crop + "___")}
+
+    # Find the crop disease with the highest probability
+    if not filtered_predictions:
+        return None
+    
+    best_crop_disease = max(filtered_predictions, key=filtered_predictions.get)
+    best_proba = filtered_predictions[best_crop_disease]
+
+    return {"crop_condition": best_crop_disease, "pred_proba": best_proba}
+
+def disease_prediction_service(img,crop_name):
+    prediction = predict_image(img)
+    result = get_best_crop_prediction(prediction, crop_name)
+
+    if result["pred_proba"] < 0.3:
+        return {
+        "responseCode": exceptions.ResponseConstant.ERROR_PROCESSING.responseCode,
+        "responseMessage": "Incorrect Crop Input or Incorrect Image Format"
+        }
+    elif result["pred_proba"] < 0.7:
+        return {
+        "responseCode": exceptions.ResponseConstant.LOW_CONFIDENCE.responseCode,
+        "responseMessage": exceptions.ResponseConstant.LOW_CONFIDENCE.responseMessage,
+        "body": result
+        }
+    else:
+        return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": result
+        }
+   
+
 #print(predict_crop_service(10,10,10,7,100,"Lagos"))

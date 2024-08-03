@@ -71,11 +71,18 @@ class FertilizerPredictionResponse(BaseModel):
     phosphorous_scale: float
     potassium_scale: float
 
+class DiseaseResponse(BaseModel):
+    crop_condition: str
+    pred_proba: float
+
 class GetCropsResponse(BaseResponse):
     body: list
 
 class GetRecommedationResponse(BaseResponse):
     body: str
+
+class DetailedDiseaseResponse(BaseResponse):
+    body: DiseaseResponse
 
 class DetailedCropPredictionResponse(BaseResponse):
     body: CropPredictionResponse
@@ -86,3 +93,4 @@ class DetailedFertilizerPredictionResponse(BaseResponse):
 ResponseUnionCropPrediction = Union[DetailedCropPredictionResponse, BaseResponse]
 ResponseUnionFertilizerPrediction = Union[DetailedFertilizerPredictionResponse, BaseResponse]
 ResponseUnionRecommendation = Union[GetRecommedationResponse, BaseResponse]
+ResponseUnionDiseaseResponse = Union[DetailedDiseaseResponse, BaseResponse]

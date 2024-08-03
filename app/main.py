@@ -69,16 +69,21 @@ async def fert_recommend(request: schema.FertilizerPredictionRequest):
     )
     return data
 
-@app.get("/get-crops",response_model=schema.GetCropsResponse)
-async def get_crops():
-    result = service.get_crops()
+@app.get("/get-crops-fertilizer",response_model=schema.GetCropsResponse)
+async def get_crops_fertilizer():
+    result = service.get_crops_fertilizer()
     return result
 
-@app.post("/disease-predict")
-async def disease_prediction(request: Request, file: UploadFile = File(...)):
+@app.get("/get-crops-diseases",response_model=schema.GetCropsResponse)
+async def get_crops_diseases():
+    result = service.get_crops_diseases()
+    return result
+
+@app.post("/disease-predict/{crop_name}",response_model=schema.ResponseUnionDiseaseResponse)
+async def disease_prediction(request: Request,crop_name:str, file: UploadFile = File(...)):
     #title = 'Harvestify - Disease Detection'
     img = await file.read()
-    prediction = service.predict_image(img)
+    prediction = service.disease_prediction_service(img,crop_name)
     return prediction
 
 @app.post("/get-crop-recommendation",response_model=schema.ResponseUnionRecommendation)
