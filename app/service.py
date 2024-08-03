@@ -121,9 +121,9 @@ def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
         K_normal = fertilizer_data[fertilizer_data["Crop"] == crop_name]["K"]
         pH_normal = fertilizer_data[fertilizer_data["Crop"] == crop_name]["pH"]
 
-        N_scale = calc_scale(nitrogen,N_normal,0.05)
-        P_scale = calc_scale(phosphorous,P_normal,0.05)
-        K_scale = calc_scale(potassium,K_normal,0.05)
+        N_scale = calc_scale(nitrogen,N_normal,0.002)
+        P_scale = calc_scale(phosphorous,P_normal,0.002)
+        K_scale = calc_scale(potassium,K_normal,0.002)
         pH_scale = calc_scale(ph,pH_normal,0.2)
 
         best_season = planting_data[planting_data["crop"] == crop_name]["best_season"].values[0]
