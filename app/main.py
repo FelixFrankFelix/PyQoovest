@@ -21,6 +21,7 @@ import app.schema as schema
 import app.recommedation_engine as rec
 
 
+
 app = FastAPI()
 
 # Setup templates directory
@@ -45,20 +46,33 @@ async def home():
     return {"STATUS":"OK"}
 
 
-@app.post("/crop-predict")
-async def crop_prediction(request: Request, nitrogen: int = Form(...), phosphorous: int = Form(...), pottasium: int = Form(...), ph: float = Form(...), rainfall: float = Form(...), city: str = Form(...)):
-    result = service.predict_crop_service(nitrogen,phosphorous,pottasium,ph,rainfall,city)
+@app.post("/crop-predict",response_model=schema.DetailedCropPredictionResponse)
+async def crop_prediction(request: schema.CropPredictionRequest):
+    result = service.predict_crop_service(
+        request.nitrogen,
+        request.phosphorous,
+        request.potassium,
+        request.ph,
+        request.rainfall,
+        request.city
+    )
+    print(result)
     return result
 
 @app.post("/fertilizer-predict")
-async def fert_recommend(request: Request, cropname: str = Form(...), nitrogen: int = Form(...), phosphorous: int = Form(...), pottasium: int = Form(...)):
-    data = service.predict_fertilizer_service(cropname,nitrogen,phosphorous,pottasium)
+async def fert_recommend(request: schema.FertilizerPredictionRequest):
+    data = service.predict_fertilizer_service(
+        request.cropname,
+        request.nitrogen,
+        request.phosphorous,
+        request.potassium
+    )
     return data
 
-@app.get("/get-crops")
+@app.get("/get-crops",response_model=schema.GetCropsResponse)
 async def get_crops():
-    crops = list(service.fertilizer["Crop"].unique())
-    return crops
+    result = service.get_crops()
+    return result
 
 @app.post("/disease-predict")
 async def disease_prediction(request: Request, file: UploadFile = File(...)):
@@ -67,12 +81,23 @@ async def disease_prediction(request: Request, file: UploadFile = File(...)):
     prediction = service.predict_image(img)
     return prediction
 
-@app.post("/get-crop-recommendation")
-async def get_crop_recommendation(request: schema.RecRequest):
-    recommendation_result = rec.factor_crop_rec(request.factor, request.factor_value,request.factor_normal,request.crop_name)
+@app.post("/get-crop-recommendation",response_model=schema.ResponseUnionRecommendation)
+async def get_crop_recommendation(request: schema.CropRecommedationRequest):
+    recommendation_result = service.get_crop_recommendation_service(request.factor, request.factor_value,request.factor_normal,request.crop_name)
     return recommendation_result
 
-@app.post("/get-ferterlizer-recommendation")
-async def get_ferterlizer_recommendation(request: schema.FertRecRequest):
-    ferterlizer_recommendation = rec.factor_fert_rec(request.N,request.P,request.K,request.N_level,request.P_level,request.K_level,request.N_normal,request.P_normal,request.K_normal,request.crop_name)
+@app.post("/get-ferterlizer-recommendation",response_model=schema.ResponseUnionRecommendation)
+async def get_fertilizer_recommendation(request: schema.FertilzerRecommedationRequest):
+    ferterlizer_recommendation = service.get_fertilizer_recommendation_service(
+        request.nitrogen,
+        request.phosphorous,
+        request.potassium,
+        request.nitrogen_level,
+        request.phosphorous_level,
+        request.potassium_level,
+        request.nitrogen_normal,
+        request.phosphorous_normal,
+        request.potassium_normal,
+        request.crop_name
+    )
     return ferterlizer_recommendation

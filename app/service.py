@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import requests
 import app.config as config
+#import config as config #test
 import pickle
 import io
 import torch
@@ -11,7 +12,10 @@ from PIL import Image
 #from app.utils.disease import disease_dic
 #from app.utils.fertilizer import fertilizer_dic
 from app.utils.model import ResNet9
-
+import app.exceptions as exceptions
+#from utils.model import ResNet9 #test
+#import exceptions as exceptions #test
+import app.recommedation_engine as rec
 
 fertilizer = pd.read_csv("app/Data/fertilizer.csv")
 fertilizer_dict = dict(fertilizer)
@@ -94,11 +98,11 @@ def convert_to_python_type(value):
         return float(value)
     return value
 
-def predict_crop_service(nitrogen, phosphorous, pottasium, ph, rainfall, city):
+def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
     weather = weather_fetch(city)
     if weather:
         temperature, humidity = weather
-        data = np.array([[nitrogen, phosphorous, pottasium, temperature, humidity, ph, rainfall]])
+        data = np.array([[nitrogen, phosphorous, potassium, temperature, humidity, ph, rainfall]])
         my_prediction = crop_recommendation_model.predict(data)
         crop_name = my_prediction[0]
     
@@ -112,37 +116,52 @@ def predict_crop_service(nitrogen, phosphorous, pottasium, ph, rainfall, city):
 
         N_scale = calc_scale(nitrogen,N_normal,0.05)
         P_scale = calc_scale(phosphorous,P_normal,0.05)
-        K_scale = calc_scale(pottasium,K_normal,0.05)
+        K_scale = calc_scale(potassium,K_normal,0.05)
         pH_scale = calc_scale(ph,pH_normal,0.2)
         
-        result ={
-            "crop" : crop_name,
-            "N": nitrogen,
-            "P": phosphorous,
-            "K" : pottasium,
-            "Temp" : temperature,
-            "Humidity" : humidity,
-            "pH" : ph,
-            "N_normal" : float(N_normal),
-            "P_normal" : float(P_normal),
-            "K_normal" : float(K_normal),
-            "pH_normal" :float(pH_normal),
-            "N_scale" : N_scale,
-            "P_scale" : P_scale,
-            "K_scale" : K_scale,
-            "pH_scale" : pH_scale
+        result = {
+        "crop": crop_name,
+        "nitrogen": nitrogen,
+        "phosphorous": phosphorous,
+        "potassium": potassium,
+        "temp": temperature,
+        "humidity": humidity,
+        "ph": ph,
+        "nitrogen_normal": float(N_normal),
+        "phosphorous_normal": float(P_normal),
+        "potassium_normal": float(K_normal),
+        "ph_normal": float(pH_normal),
+        "nitrogen_scale": N_scale,
+        "phosphorous_scale": P_scale,
+        "potassium_scale": K_scale,
+        "ph_scale": pH_scale
         }
-        return result
-    else:
-        return {"STATUS":"ERROR"}
+        return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": result
+        }
 
-def predict_fertilizer_service(cropname,nitrogen,phosphorous,pottasium):
+    else:
+        return {
+        "responseCode": exceptions.ResponseConstant.INVALID_ENTRY.responseCode,
+        "responseMessage": exceptions.ResponseConstant.INVALID_ENTRY.responseMessage, 
+        }
+
+def predict_fertilizer_service(cropname,nitrogen,phosphorous,potassium):
     crop_name = cropname.lower()
     soil_N = nitrogen
     soil_P = phosphorous
-    soil_K = pottasium
+    soil_K = potassium
     
     df = pd.read_csv('app/Data/fertilizer.csv')
+
+    crop_list = list(df['Crop'].unique())
+    if crop_name not in crop_list:
+        return {
+        "responseCode": exceptions.ResponseConstant.INVALID_ENTRY.responseCode,
+        "responseMessage": exceptions.ResponseConstant.INVALID_ENTRY.responseMessage, 
+        }
 
     margin = 0.2
     # Extract the required levels for the specified crop
@@ -176,23 +195,76 @@ def predict_fertilizer_service(cropname,nitrogen,phosphorous,pottasium):
 
     N_scale = calc_scale(nitrogen,N_normal,0.05)
     P_scale = calc_scale(phosphorous,P_normal,0.05)
-    K_scale = calc_scale(pottasium,K_normal,0.05)
+    K_scale = calc_scale(potassium,K_normal,0.05)
     # Create the response dictionary
     data = {
-        'soil_N': convert_to_python_type(soil_N),
-        'soil_P': convert_to_python_type(soil_P),
-        'soil_K': convert_to_python_type(soil_K),
-        'N_normal': convert_to_python_type(N_normal),
-        'P_normal': convert_to_python_type(P_normal),
-        'K_normal': convert_to_python_type(K_normal),
-        'soil_N_level': soil_N_level,
-        'soil_P_level': soil_P_level,
-        'soil_K_level': soil_K_level,
-        'N_scale': N_scale,
-        'P_scale': P_scale,
-        'K_scale': K_scale
+        'nitrogen': convert_to_python_type(soil_N),
+        'phosphorous': convert_to_python_type(soil_P),
+        'potassium': convert_to_python_type(soil_K),
+        'nitrogen_normal': convert_to_python_type(N_normal),
+        'phosphorous_normal': convert_to_python_type(P_normal),
+        'potassium_normal': convert_to_python_type(K_normal),
+        'nitrogen_level': soil_N_level,
+        'phosphorous_level': soil_P_level,
+        'potassium_level': soil_K_level,
+        'nitrogen_scale': N_scale,
+        'phosphorous_scale': P_scale,
+        'potassium_scale': K_scale
     }
+    return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": data
+        }
 
-    return data
+def get_crops():
+    crops = list(fertilizer["Crop"].unique())
+    return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": crops
+        }
 
-#print(predict_fertilizer_service("watermelon",80,7,10))
+def get_crop_recommendation_service(factor,factor_value,factor_normal,crop_name):
+    recommendation_result,exception_status = rec.factor_crop_rec(factor, factor_value,factor_normal,crop_name)
+    print(recommendation_result,exception_status)
+    if exception_status == "NO":
+        return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": recommendation_result
+         }
+    elif exception_status == "YES":
+        return {
+        "responseCode": exceptions.ResponseConstant.ERROR_PROCESSING.responseCode,
+        "responseMessage": recommendation_result
+         }
+
+def get_fertilizer_recommendation_service(nitrogen,phosphorous,potassium,nitrogen_level,phosphorous_level,
+                                            potassium_level,nitrogen_normal,phosphorous_normal,potassium_normal,crop_name):
+    
+    recommendation_result,exception_status = rec.factor_fert_rec(
+        nitrogen,
+        phosphorous,
+        potassium,
+        nitrogen_level,
+        phosphorous_level,
+        potassium_level,
+        nitrogen_normal,
+        phosphorous_normal,
+        potassium_normal,
+        crop_name
+    )
+    
+    if exception_status == "NO":
+        return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": recommendation_result
+         }
+    elif exception_status == "YES":
+        return {
+        "responseCode": exceptions.ResponseConstant.ERROR_PROCESSING.responseCode,
+        "responseMessage": recommendation_result
+         }
+#print(predict_crop_service(10,10,10,7,100,"Lagos"))
