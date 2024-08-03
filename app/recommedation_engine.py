@@ -43,4 +43,4 @@ def factor_fert_rec(N,P,K,N_level,P_level,K_level,N_normal,P_normal,K_normal,cro
         return e,exception_status
 
 
-print(factor_fert_rec(20,20,20,"Low","High","Normal",30,10,21,"corn"))
+#print(factor_fert_rec(20,20,20,"Low","High","Normal",30,10,21,"corn"))
