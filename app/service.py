@@ -218,6 +218,7 @@ def predict_fertilizer_service(cropname,nitrogen,phosphorous,potassium):
     K_scale = calc_scale(potassium,K_normal,0.05)
     # Create the response dictionary
     data = {
+        'crop': crop_name,
         'nitrogen': convert_to_python_type(soil_N),
         'phosphorous': convert_to_python_type(soil_P),
         'potassium': convert_to_python_type(soil_K),

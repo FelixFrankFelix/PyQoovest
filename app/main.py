@@ -58,7 +58,7 @@ async def crop_prediction(request: schema.CropPredictionRequest):
     )
     return result
 
-@app.post("/fertilizer-predict")
+@app.post("/fertilizer-predict",response_model=schema.ResponseUnionFertilizerPrediction)
 async def fert_recommend(request: schema.FertilizerPredictionRequest):
     data = service.predict_fertilizer_service(
         request.cropname,

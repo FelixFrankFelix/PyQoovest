@@ -69,6 +69,7 @@ class FertilizerPredictionRequest(BaseModel):
     potassium: int
 
 class FertilizerPredictionResponse(BaseModel):
+    crop: str
     nitrogen: float
     phosphorous: float
     potassium: float
