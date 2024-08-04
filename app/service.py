@@ -137,7 +137,7 @@ def predict_crop_service(nitrogen, phosphorous, potassium, ph, rainfall, city):
             "season_end": int(season_end),
             "days_to_maturity": int(days_to_maturity)
         }
-        print(planting_data)
+        #print(planting_data)
         result = {
         "crop": crop_name,
         "nitrogen": nitrogen,
@@ -263,7 +263,7 @@ def get_crops_diseases():
 
 def get_crop_recommendation_service(factor,factor_value,factor_normal,crop_name):
     recommendation_result,exception_status = rec.factor_crop_rec(factor, factor_value,factor_normal,crop_name)
-    print(recommendation_result,exception_status)
+    #print(recommendation_result,exception_status)
     if exception_status == "NO":
         return {
         "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
@@ -290,6 +290,24 @@ def get_fertilizer_recommendation_service(nitrogen,phosphorous,potassium,nitroge
         phosphorous_normal,
         potassium_normal,
         crop_name
+    )
+    
+    if exception_status == "NO":
+        return {
+        "responseCode": exceptions.ResponseConstant.SUCCESS.responseCode,
+        "responseMessage": exceptions.ResponseConstant.SUCCESS.responseMessage,
+        "body": recommendation_result
+         }
+    elif exception_status == "YES":
+        return {
+        "responseCode": exceptions.ResponseConstant.ERROR_PROCESSING.responseCode,
+        "responseMessage": recommendation_result
+         }
+
+def get_disease_recommendation_service(crop_name,disease_name):
+    
+    recommendation_result,exception_status = rec.factor_disease_rec(
+        crop_name, disease_name
     )
     
     if exception_status == "NO":

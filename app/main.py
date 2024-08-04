@@ -105,3 +105,11 @@ async def get_fertilizer_recommendation(request: schema.FertilzerRecommedationRe
         request.crop_name
     )
     return ferterlizer_recommendation
+
+@app.post("/get-disease-recommendation",response_model=schema.ResponseUnionRecommendation)
+async def get_disease_recommendation(request: schema.DiseaseRecommedationRequest):
+    disease_recommendation = service.get_disease_recommendation_service(
+        request.crop_name,
+        request.disease_name
+    )
+    return disease_recommendation

@@ -24,6 +24,11 @@ class FertilzerRecommedationRequest(BaseModel):
     potassium_level: str
     crop_name: str
 
+class DiseaseRecommedationRequest(BaseModel):
+    crop_name: str
+    disease_name: str
+
+
 class PlantingData(BaseModel):
     best_season: str
     season_start: int

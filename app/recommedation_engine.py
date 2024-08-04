@@ -42,5 +42,21 @@ def factor_fert_rec(N,P,K,N_level,P_level,K_level,N_normal,P_normal,K_normal,cro
         exception_status="YES"
         return e,exception_status
 
+def factor_disease_rec(crop_name,disease_name):
+    exception_status = "NO"
+    try:
+        completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages = [
+            {"role": "system", "content": "You are a recommender for rural farmers. only use block of text in 100 words strictly and make responses dynamic, The response should be in 2 paragraphs, first paragraph should speak to Causes of the disease and the second paragraph should speak to remedies, you should add kenyan local remedies, if you add Kenyan traditional name, describe it briefly)"},
+            {"role": "user", "content": f"""Provide Recommendation for disease diagnosis for {crop_name} having {disease_name},the recommedations should be tailored to the crop and if the crop condition({disease_name}) is healty, provide recommendation for maintainance"""},
+    ]
+
+    )
+        return completion.choices[0].message.content,exception_status
+    except Exception as e:
+        exception_status="YES"
+        return e,exception_status
+
 
 #print(factor_fert_rec(20,20,20,"Low","High","Normal",30,10,21,"corn"))
