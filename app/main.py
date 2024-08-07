@@ -19,10 +19,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.service as service
 import app.schema as schema
 import app.recommedation_engine as rec
+#from mangum import Magnum
 
 
 
 app = FastAPI()
+#handler = Magnum(app)
 
 # Setup templates directory
 templates = Jinja2Templates(directory="templates")
